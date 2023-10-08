@@ -2,6 +2,8 @@ from flask import  request, jsonify, Blueprint
 from config import db
 from ..models.user import User, UserSchema
 from marshmallow import ValidationError
+from sqlalchemy import text
+import json
 
 user_routes = Blueprint("user_routes", __name__)
 user_schema   = UserSchema()
@@ -30,8 +32,17 @@ def user_list():
 # get by id
 @user_routes.route('/users/<int:id>', methods=['GET'])
 def user_by_id(id):
-    result = User.query.get(id)
-    return user_schema.jsonify(result)
+    ##search in the role table for the role_id and return the name
+    result = db.session.execute(text("SELECT users.id, users.first_name, users.last_name, roles.name FROM users JOIN roles ON roles.id = users.role_id WHERE users.id = :id"), {'id': id})
+    result = result.fetchone()
+
+    json = {
+        "id": result[0],
+        "first_name": result[1],
+        "last_name": result[2],
+        "role": result[3]
+    }
+    return jsonify(json)
 
 # put
 @user_routes.route('/users/<int:id>', methods=['PUT'])
