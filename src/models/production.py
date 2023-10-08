@@ -20,6 +20,10 @@ class Production(db.Model):
         self.quantity = quantity
         self.date = date
 
+    def ByUser(user_id):
+        result = db.session.execute(text("SELECT SUM(productions.quantity) AS total_quantity, users.first_name,users.last_name,productions.date,products.name,products.unit_compensation,products.package_compensation FROM productions JOIN products ON products.id = productions.product_id JOIN users ON users.id = productions.user_id WHERE users.id = :user_id GROUP BY users.first_name, users.last_name, productions.date, products.name, products.id;"), {'user_id': user_id})
+        
+        return result
 with app.app_context():
     db.create_all()
 

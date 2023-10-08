@@ -1,7 +1,7 @@
 from flask import  request, jsonify, Blueprint
 from config import db
 from ..models.production import Production, ProductionSchema
-
+from ..models.user_production import UserProduction, UserProductionSchema
 production_routes = Blueprint("production_routes", __name__)
 production_schema   = ProductionSchema()
 production_schemas = ProductionSchema(many=True)
@@ -19,9 +19,16 @@ def create():
     db.session.add(result)
     db.session.commit()
     return production_schema.jsonify(result)
+
 # # get
+@production_routes.route('/productions/<int:user_id>', methods=['GET'])
 @production_routes.route('/productions', methods=['GET'])
-def role_list():
-    resultall = Production.query.all()
-    all_users = production_schemas.dump(resultall)
-    return jsonify(all_users)
+def production_list(user_id=None):
+    if user_id == None:
+        resultall = Production.query.all()
+        all_users = production_schemas.dump(resultall)
+        return jsonify(all_users)
+
+    resultall = UserProduction.ByUser(user_id)
+
+    return jsonify(resultall)
