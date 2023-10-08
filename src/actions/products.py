@@ -14,7 +14,7 @@ def create():
     if errs:
         return {"error": errs}, 422
 
-    result = Product(json_data['name'],json_data['price'], json_data['unit_compensation'], json_data['package_compensation'])
+    result = Product(json_data['name'],json_data['price'], json_data['unit_compensation'], json_data['package_compensation'], json_data['kind'])
     db.session.add(result)
     db.session.commit()
     return product_schema.jsonify(json_data)

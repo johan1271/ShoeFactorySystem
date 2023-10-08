@@ -47,12 +47,18 @@ def validate_product_id(val):
     if row[0] == 0:
         raise ValidationError('Product does not exist.')
 
+def validate_kind(val):
+    #check if kind is valid
+    val = val.lower()
+    if val != 'guarnecedor' and val != 'cortador' and val != 'ensamblador':
+        raise ValidationError('Kind is not valid.')
+
 class ProductSchema(ma.Schema):
     id = fields.Integer(allow_none=False)
     name = fields.Str(required=True, allow_none=False, validate=[validate_str, validate_product])
     price = fields.Integer(required=True, allow_none=False, validate=validate_int)
     unit_compensation = fields.Float(required=True, allow_none=False, validate=validate_float)
     package_compensation = fields.Float(required=True, allow_none=False, validate=validate_float)
-    kind = fields.Str(required=True, allow_none=False, validate=[validate_str])
+    kind = fields.Str(required=True, allow_none=False, validate=[validate_str, validate_kind])
     class Meta:
         fields = ('id', 'name', 'price', 'unit_compensation', 'package_compensation', 'kind')
