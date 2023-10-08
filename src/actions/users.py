@@ -23,6 +23,36 @@ def create():
 # get
 @user_routes.route('/users', methods=['GET'])
 def user_list():
-    resultall = User.query.all()
+    resultall = User.query.filter(User.active == True).all()
     all_users = user_schemas.dump(resultall)
     return jsonify(all_users)
+
+# get by id
+@user_routes.route('/users/<int:id>', methods=['GET'])
+def user_by_id(id):
+    result = User.query.get(id)
+    return user_schema.jsonify(result)
+
+# put
+@user_routes.route('/users/<int:id>', methods=['PUT'])
+def user_update(id):
+    json_data = request.json
+    errs = user_schema.validate(json_data)
+    if errs:
+        return {"error": errs}, 422
+
+    result = User.query.get(id)
+    result.first_name = json_data['first_name']
+    result.last_name = json_data['last_name']
+    result.role_id = json_data['role_id']
+    db.session.commit()
+    return user_schema.jsonify(json_data)
+
+
+# delete
+@user_routes.route('/users/<int:id>', methods=['DELETE'])
+def user_delete(id):
+    result = User.query.get(id)
+    result.active = False
+    db.session.commit()
+    return user_schema.jsonify(result)

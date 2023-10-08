@@ -25,3 +25,30 @@ def role_list():
     resultall = Role.query.all()
     all_users = role_schemas.dump(resultall)
     return jsonify(all_users)
+
+# get by id
+@role_routes.route('/roles/<int:id>', methods=['GET'])
+def role_by_id(id):
+    result = Role.query.get(id)
+    return role_schema.jsonify(result)
+
+# put
+@role_routes.route('/roles/<int:id>', methods=['PUT'])
+def role_update(id):
+    json_data = request.json
+    errs = role_schema.validate(json_data)
+    if errs:
+        return {"error": errs}, 422
+
+    result = Role.query.get(id)
+    result.name = json_data['name']
+    db.session.commit()
+    return role_schema.jsonify(json_data)
+
+# delete
+@role_routes.route('/roles/<int:id>', methods=['DELETE'])
+def role_delete(id):
+    result = Role.query.get(id)
+    db.session.delete(result)
+    db.session.commit()
+    return role_schema.jsonify(result)

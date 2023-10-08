@@ -25,9 +25,8 @@ def create():
 @production_routes.route('/productions', methods=['GET'])
 def production_list(user_id=None):
     if user_id == None:
-        resultall = Production.query.all()
-        all_users = production_schemas.dump(resultall)
-        return jsonify(all_users)
+        resultall = UserProduction.All()
+        return jsonify(resultall)
 
     resultall = UserProduction.ByUser(user_id)
 

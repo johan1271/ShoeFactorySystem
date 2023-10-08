@@ -39,6 +39,7 @@ class UserProduction(db.Model):
         new["quantity"] = 12
         new["unit_price"] = production['price']
         new["percentage"] = production['package_compensation']
+        new["employee_name"] = production['first_name'] + " " + production['last_name']
     
         return new
 
@@ -52,11 +53,53 @@ class UserProduction(db.Model):
         new["quantity"] = remaining
         new["unit_price"] = production['price']
         new["percentage"] = production['unit_compensation']
+        new["employee_name"] = production['first_name'] + " " + production['last_name']
 
         return new
 
+    def build_final_object(production, final_object, production_object):
+        production['unit_compensation'] = float(production['unit_compensation'])
+        production['package_compensation'] = float(production['package_compensation'])
+        production['total_quantity'] = int(production['total_quantity'])
+        production['date'] = str(production['date'])
+        production['price'] = int(production['price'])
+
+        if production['total_quantity'] > 12:
+            new = UserProduction.package_calculation(production)
+            final_object.append(new)
+            remaining = production['total_quantity'] % 12
+        
+            if remaining > 0:
+                new = UserProduction.unit_calculation(production, remaining)
+                final_object.append(new)
+
+        elif production['total_quantity'] == 12:
+            new = UserProduction.package_calculation(production)
+            final_object.append(new)
+
+        else:
+            remaining = production['total_quantity']
+            new = UserProduction.unit_calculation(production, remaining)
+            final_object.append(new)
+
+        production_object['production'] = final_object
+
     def ByUser(user_id):
-        result = db.session.execute(text("SELECT SUM(productions.quantity) AS total_quantity, users.first_name,users.last_name,productions.date,products.name,products.unit_compensation,products.package_compensation, products.price FROM productions JOIN products ON products.id = productions.product_id JOIN users ON users.id = productions.user_id WHERE users.id = :user_id GROUP BY users.first_name, users.last_name, productions.date, products.name, products.id;"), {'user_id': user_id})
+        result = db.session.execute(text('''
+        SELECT 
+            SUM(productions.quantity) AS total_quantity,
+            users.first_name,
+            users.last_name,
+            productions.date,
+            products.name,
+            products.unit_compensation,
+            products.package_compensation,
+            products.price 
+        FROM productions 
+        JOIN products ON products.id = productions.product_id 
+        JOIN users ON users.id = productions.user_id 
+        WHERE users.id = :user_id 
+        GROUP BY users.first_name, users.last_name, productions.date, products.name, products.id;'''), {'user_id': user_id})
         
         schema = UserProductionSchema(many=True)
         all_production = schema.dump(result)
@@ -69,29 +112,35 @@ class UserProduction(db.Model):
             production['date'] = str(production['date'])
             production['price'] = int(production['price'])
 
-            if production['total_quantity'] > 12:
-                new = UserProduction.package_calculation(production)
-                package_object.append(new)
-                remaining = production['total_quantity'] % 12
-            
-                if remaining > 0:
-                    new = UserProduction.unit_calculation(production, remaining)
-                    package_object.append(new)
-
-            elif production['total_quantity'] == 12:
-                new = UserProduction.package_calculation(production)
-                package_object.append(new)
-
-            else:
-                remaining = production['total_quantity']
-                new = UserProduction.unit_calculation(production, remaining)
-                package_object.append(new)
-
-            
-            user_production_object['production'] = package_object
+            UserProduction.build_final_object(production, package_object, user_production_object)
             user_production_object['total_compensation'] = sum([x['compensation'] for x in package_object])
 
         return user_production_object
+
+    def All():
+        result = db.session.execute(text('''
+            SELECT 
+                SUM(productions.quantity) AS total_quantity,
+                users.first_name,
+                users.last_name,
+                productions.date,
+                products.name,
+                products.unit_compensation,
+                products.package_compensation,
+                products.price 
+            FROM productions 
+            JOIN products ON products.id = productions.product_id 
+            JOIN users ON users.id = productions.user_id 
+            GROUP BY users.first_name, users.last_name, productions.date, products.name, products.id;'''))
+        
+        schema = UserProductionSchema(many=True)
+        all_production = schema.dump(result)
+        production_object = {}
+        package_object = []
+        for production in all_production:
+            UserProduction.build_final_object(production, package_object, production_object)
+
+        return production_object
 
 class UserProductionSchema(ma.Schema):
     id = fields.Integer(allow_none=False)
