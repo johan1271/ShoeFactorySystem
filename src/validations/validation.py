@@ -1,5 +1,4 @@
 from marshmallow import ValidationError
-import datetime
 
 def validate_str(val):
     if not isinstance(val, str):
