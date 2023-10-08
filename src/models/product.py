@@ -10,12 +10,14 @@ class Product(db.Model):
     price = db.Column(db.Integer)
     unit_compensation = db.Column(db.Float)
     package_compensation = db.Column(db.Float)
+    kind = db.Column(db.String(50))
 
-    def __init__(self, name, price, unit_compensation, package_compensation):
+    def __init__(self, name, price, unit_compensation, package_compensation, kind):
         self.name = name
         self.price = price
         self.unit_compensation = unit_compensation
         self.package_compensation = package_compensation
+        self.kind = kind
 
 with app.app_context():
     db.create_all()
@@ -51,5 +53,6 @@ class ProductSchema(ma.Schema):
     price = fields.Integer(required=True, allow_none=False, validate=validate_int)
     unit_compensation = fields.Float(required=True, allow_none=False, validate=validate_float)
     package_compensation = fields.Float(required=True, allow_none=False, validate=validate_float)
+    kind = fields.Str(required=True, allow_none=False, validate=[validate_str])
     class Meta:
-        fields = ('id', 'name', 'price', 'unit_compensation', 'package_compensation')
+        fields = ('id', 'name', 'price', 'unit_compensation', 'package_compensation', 'kind')
