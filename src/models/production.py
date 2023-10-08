@@ -1,5 +1,10 @@
 from config import db, ma, app
-
+from .role import Role
+from sqlalchemy import text
+from marshmallow import fields, ValidationError
+from ..validations.validation import validate_str, validate_int
+from .product import validate_product_id
+from .user import validate_no_exist
 class Production(db.Model):
     __tablename__ = 'productions'
 
@@ -21,6 +26,11 @@ with app.app_context():
     db.create_all()
 
 class ProductionSchema(ma.Schema):
+    id = fields.Integer(allow_none=False)
+    user_id = fields.Integer(required=True, allow_none=False, validate=[validate_int, validate_no_exist])
+    product_id = fields.Integer(required=True, allow_none=False, validate=[validate_int, validate_product_id])
+    quantity = fields.Integer(required=True, allow_none=False, validate=[validate_int])
+    date = fields.Date(required=True, allow_none=False)
     class Meta:
         fields = ('id', 'user_id', 'product_id', 'quantity', 'date')
 

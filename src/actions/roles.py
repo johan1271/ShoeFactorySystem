@@ -9,13 +9,15 @@ role_schemas = RoleSchema(many=True)
 # post
 @role_routes.route('/roles', methods=['POST'])
 def create():
-    name = request.json['name']
-    result = Role(name)
+    json_data = request.json
+    errs = role_schema.validate(json_data)
+    if errs:
+        return {"error": errs}, 422
 
+    result = Role(json_data['name'])
     db.session.add(result)
     db.session.commit()
-
-    return role_schema.jsonify(result)
+    return role_schema.jsonify(json_data)
 
 # # get
 @role_routes.route('/roles', methods=['GET'])

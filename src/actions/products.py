@@ -9,18 +9,17 @@ product_schemas = ProductSchema(many=True)
 # post
 @product_routes.route('/products', methods=['POST'])
 def create():
-    name = request.json['name']
-    price = request.json['price']
-    unit_compensation = request.json['unit_compensation']
-    package_compensation = request.json['package_compensation']
-    result = Product(name, price, unit_compensation, package_compensation)
+    json_data = request.json
+    errs = product_schema.validate(json_data)
+    if errs:
+        return {"error": errs}, 422
 
+    result = Product(json_data['name'],json_data['price'], json_data['unit_compensation'], json_data['package_compensation'])
     db.session.add(result)
     db.session.commit()
+    return product_schema.jsonify(json_data)
 
-    return product_schema.jsonify(result)
-
-# # get
+# get
 @product_routes.route('/products', methods=['GET'])
 def product_list():
     resultall = Product.query.all()
