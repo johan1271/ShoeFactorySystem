@@ -84,7 +84,13 @@ class UserProduction(db.Model):
 
         production_object['production'] = final_object
 
-    def ByUser(user_id):
+    def ByUser(user_id, start_date, end_date):
+        if start_date == None:
+            start_date = '1900-01-01'
+        
+        if end_date == None:
+            end_date = '2100-01-01'
+
         result = db.session.execute(text('''
         SELECT 
             SUM(productions.quantity) AS total_quantity,
@@ -99,7 +105,13 @@ class UserProduction(db.Model):
         JOIN products ON products.id = productions.product_id 
         JOIN users ON users.id = productions.user_id 
         WHERE users.id = :user_id 
-        GROUP BY users.first_name, users.last_name, productions.date, products.name, products.id;'''), {'user_id': user_id})
+        AND 
+            productions.date
+        BETWEEN
+            :start_date
+        AND
+            :end_date
+        GROUP BY users.first_name, users.last_name, productions.date, products.name, products.id;'''), {'user_id': user_id, 'start_date': start_date, 'end_date': end_date})
         
         schema = UserProductionSchema(many=True)
         all_production = schema.dump(result)
@@ -117,7 +129,13 @@ class UserProduction(db.Model):
 
         return user_production_object
 
-    def All():
+    def All(start_date, end_date):
+        if start_date == None:
+            start_date = '1900-01-01'
+
+        if end_date == None:
+            end_date = '2100-01-01'
+            
         result = db.session.execute(text('''
             SELECT 
                 SUM(productions.quantity) AS total_quantity,
@@ -131,7 +149,13 @@ class UserProduction(db.Model):
             FROM productions 
             JOIN products ON products.id = productions.product_id 
             JOIN users ON users.id = productions.user_id 
-            GROUP BY users.first_name, users.last_name, productions.date, products.name, products.id;'''))
+            WHERE 
+                productions.date
+            BETWEEN
+                :start_date 
+            AND 
+                :end_date
+            GROUP BY users.first_name, users.last_name, productions.date, products.name, products.id;'''), {'start_date': start_date, 'end_date': end_date})
         
         schema = UserProductionSchema(many=True)
         all_production = schema.dump(result)

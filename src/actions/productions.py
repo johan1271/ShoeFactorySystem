@@ -24,10 +24,14 @@ def create():
 @production_routes.route('/productions/<int:user_id>', methods=['GET'])
 @production_routes.route('/productions', methods=['GET'])
 def production_list(user_id=None):
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    print(start_date)
     if user_id == None:
-        resultall = UserProduction.All()
+        resultall = UserProduction.All(start_date, end_date)
         return jsonify(resultall)
 
-    resultall = UserProduction.ByUser(user_id)
+    resultall = UserProduction.ByUser(user_id, start_date, end_date)
 
     return jsonify(resultall)
