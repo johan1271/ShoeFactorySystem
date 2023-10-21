@@ -16,11 +16,14 @@ app.register_blueprint(auth_routes)
 @user_routes.before_request
 @role_routes.before_request
 def check_if_logged_in():
-    token = request.headers['Authorization'].split(" ")[1]
-    if token == None:
+
+    request_params = request.args
+    if request_params.get('Authorization') == None :
         response = jsonify({"message": "Token not found"})
         response.status_code = 404
         return response
+    
+    token = request_params.get('Authorization').split(" ")[1]
     return validate_token(token, output=False)
 
 app.register_blueprint(production_routes)
