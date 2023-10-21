@@ -5,7 +5,7 @@ from ..models.user_production import UserProduction, UserProductionSchema
 production_routes = Blueprint("production_routes", __name__)
 production_schema   = ProductionSchema()
 production_schemas = ProductionSchema(many=True)
-
+from sqlalchemy import text
 # post
 @production_routes.route('/productions', methods=['POST'])
 def create():
@@ -19,6 +19,52 @@ def create():
     db.session.add(result)
     db.session.commit()
     return production_schema.jsonify(result)
+
+
+
+# put
+@production_routes.route('/productions/<int:id>', methods=['PUT'])
+def update(id):
+    json_data = request.json
+    errs = production_schema.validate(json_data)
+    if errs:
+        return {"error": errs}, 422
+
+    result = Production.query.get(id)
+    result.user_id = json_data['user_id']
+    result.product_id = json_data['product_id']
+    result.quantity = json_data['quantity']
+    result.date = json_data['date']
+    db.session.commit()
+    return production_schema.jsonify(result)
+
+# get by id
+@production_routes.route('/productions/<int:id>', methods=['GET'])
+def production_by_id(id):
+    result = db.session.execute(text("""
+    SELECT 
+        productions.id,
+        users.first_name,
+        users.last_name,
+        roles.name AS role,
+        quantity,
+        productions.date
+    from productions
+    JOIN users ON users.id = productions.user_id
+    JOIN roles ON roles.id = users.role_id
+    WHERE productions.id = :id"""), {'id': id})
+    result = result.fetchone()
+    
+    json = {
+        "id": result[0],
+        "user_first_name": result[1],
+        "user_last_name": result[2],
+        "user_role": result[3],
+        "quantity": result[4],
+        "date": result[5]
+    }
+
+    return jsonify(json)
 
 # # get
 @production_routes.route('/productions/<int:user_id>', methods=['GET'])
