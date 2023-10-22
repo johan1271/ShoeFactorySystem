@@ -33,14 +33,21 @@ def user_list():
 @user_routes.route('/users/<int:id>', methods=['GET'])
 def user_by_id(id):
     ##search in the role table for the role_id and return the name
-    result = db.session.execute(text("SELECT users.id, users.first_name, users.last_name, roles.name FROM users JOIN roles ON roles.id = users.role_id WHERE users.id = :id"), {'id': id})
+    result = db.session.execute(text("""
+        SELECT users.id, 
+        users.first_name, 
+        users.last_name, 
+        roles.name,
+        roles.id
+        FROM users JOIN roles ON roles.id = users.role_id WHERE users.id = :id"""), {'id': id})
     result = result.fetchone()
 
     json = {
         "id": result[0],
         "first_name": result[1],
         "last_name": result[2],
-        "role": result[3]
+        "role": result[3],
+        "role_id": result[4]
     }
     return jsonify(json)
 

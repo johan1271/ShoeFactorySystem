@@ -48,8 +48,12 @@ def production_by_id(id):
         users.last_name,
         roles.name AS role,
         quantity,
-        productions.date
+        productions.date,
+        productions.product_id,
+        productions.user_id,
+        products.name AS product_name
     from productions
+    JOIN products ON products.id = productions.product_id
     JOIN users ON users.id = productions.user_id
     JOIN roles ON roles.id = users.role_id
     WHERE productions.id = :id"""), {'id': id})
@@ -61,7 +65,10 @@ def production_by_id(id):
         "user_last_name": result[2],
         "user_role": result[3],
         "quantity": result[4],
-        "date": result[5]
+        "date": result[5],
+        "product_id": result[6],
+        "user_id": result[7],
+        "product_name": result[8]
     }
 
     return jsonify(json)
@@ -73,7 +80,6 @@ def production_list(user_id=None):
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
 
-    print(start_date)
     if user_id == None:
         resultall = UserProduction.All(start_date, end_date)
         return jsonify(resultall)
@@ -81,3 +87,48 @@ def production_list(user_id=None):
     resultall = UserProduction.ByUser(user_id, start_date, end_date)
 
     return jsonify(resultall)
+
+
+@production_routes.route('/productions/<int:id>', methods=['DELETE'])
+def production_delete(id):
+    result = Production.query.get(id)
+    db.session.delete(result)
+    db.session.commit()
+    return production_schema.jsonify(result)
+
+
+@production_routes.route('/all_productions', methods=['GET'])
+def all_productions():
+    result = db.session.execute(text("""
+    SELECT 
+        productions.id,
+        users.first_name,
+        users.last_name,
+        roles.name AS role,
+        quantity,
+        productions.date,
+        productions.product_id,
+        productions.user_id,
+        products.name AS product_name
+    from productions
+    JOIN products ON products.id = productions.product_id
+    JOIN users ON users.id = productions.user_id
+    JOIN roles ON roles.id = users.role_id"""))
+    result = result.fetchall()
+
+    json = []
+    for production in result:
+        new = {
+            "id": production[0],
+            "user_first_name": production[1],
+            "user_last_name": production[2],
+            "user_role": production[3],
+            "quantity": production[4],
+            "date": production[5],
+            "product_id": production[6],
+            "user_id": production[7],
+            "product_name": production[8]
+        }
+        json.append(new)
+
+    return jsonify(json)
