@@ -25,8 +25,29 @@ def create():
 # get
 @user_routes.route('/users', methods=['GET'])
 def user_list():
-    resultall = User.query.filter(User.active == True).all()
-    all_users = user_schemas.dump(resultall)
+    result = db.session.execute(text("""
+        SELECT users.id,
+        users.first_name,
+        users.last_name,
+        roles.name,
+        roles.id,
+        users.active
+        FROM users JOIN roles ON roles.id = users.role_id"""))
+    resultall = result.fetchall()
+    
+    all_users = []
+    for user in resultall:
+        json = {
+            "id": user[0],
+            "first_name": user[1],
+            "last_name": user[2],
+            "role": user[3],
+            "role_id": user[4],
+            "active": user[5]
+        }
+        all_users.append(json)
+        
+    
     return jsonify(all_users)
 
 # get by id
