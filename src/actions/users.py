@@ -20,7 +20,7 @@ def create():
     result = User(json_data['id'],json_data['first_name'], json_data['last_name'], json_data['role_id'])
     db.session.add(result)
     db.session.commit()
-    return user_schema.jsonify(json_data)
+    return user_schema.jsonify(result)
 
 # get
 @user_routes.route('/users', methods=['GET'])
@@ -59,7 +59,8 @@ def user_by_id(id):
         users.first_name, 
         users.last_name, 
         roles.name,
-        roles.id
+        roles.id,
+        users.active
         FROM users JOIN roles ON roles.id = users.role_id WHERE users.id = :id"""), {'id': id})
     result = result.fetchone()
 
@@ -68,7 +69,8 @@ def user_by_id(id):
         "first_name": result[1],
         "last_name": result[2],
         "role": result[3],
-        "role_id": result[4]
+        "role_id": result[4],
+        "active": result[5]
     }
     return jsonify(json)
 
