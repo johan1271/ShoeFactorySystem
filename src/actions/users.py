@@ -76,14 +76,14 @@ def user_by_id(id):
 @user_routes.route('/users/<int:id>', methods=['PUT'])
 def user_update(id):
     json_data = request.json
-    errs = user_schema.validate(json_data)
-    if errs:
-        return {"error": errs}, 422
+    
 
     result = User.query.get(id)
+    result.id = json_data['id']
     result.first_name = json_data['first_name']
     result.last_name = json_data['last_name']
     result.role_id = json_data['role_id']
+    result.active = json_data['active']
     db.session.commit()
     return user_schema.jsonify(json_data)
 

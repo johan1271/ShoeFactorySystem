@@ -17,7 +17,7 @@ def create():
     result = Role(json_data['name'])
     db.session.add(result)
     db.session.commit()
-    return role_schema.jsonify(json_data)
+    return role_schema.jsonify(result)
 
 # # get
 @role_routes.route('/roles', methods=['GET'])
@@ -43,7 +43,7 @@ def role_update(id):
     result = Role.query.get(id)
     result.name = json_data['name']
     db.session.commit()
-    return role_schema.jsonify(json_data)
+    return role_schema.jsonify(result)
 
 # delete
 @role_routes.route('/roles/<int:id>', methods=['DELETE'])

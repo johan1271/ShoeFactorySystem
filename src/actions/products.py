@@ -17,7 +17,7 @@ def create():
     result = Product(json_data['name'],json_data['price'], json_data['unit_compensation'], json_data['package_compensation'], json_data['kind'])
     db.session.add(result)
     db.session.commit()
-    return product_schema.jsonify(json_data)
+    return product_schema.jsonify(result)
 
 # get
 @product_routes.route('/products', methods=['GET'])
@@ -48,7 +48,7 @@ def product_update(id):
     result.package_compensation = json_data['package_compensation']
     result.kind = json_data['kind']
     db.session.commit()
-    return product_schema.jsonify(json_data)
+    return product_schema.jsonify(result)
 
 
 # delete
