@@ -87,7 +87,7 @@ def user_update(id):
     result.role_id = json_data['role_id']
     result.active = json_data['active']
     db.session.commit()
-    return user_schema.jsonify(json_data)
+    return user_schema.jsonify(result)
 
 
 # delete
