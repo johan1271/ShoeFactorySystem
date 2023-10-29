@@ -39,8 +39,9 @@ def update(id):
     return production_schema.jsonify(result)
 
 # get by id
-@production_routes.route('/productions/<int:id>', methods=['GET'])
+@production_routes.route('/all_productions/<int:id>', methods=['GET'])
 def production_by_id(id):
+
     result = db.session.execute(text("""
     SELECT 
         productions.id,
