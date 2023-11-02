@@ -12,8 +12,10 @@ class UserProduction(db.Model):
     total_quantity = db.Column(db.Integer)
     date = db.Column(db.DateTime)
     price = db.Column(db.Integer)
+    role_name = db.Column(db.String(50))
 
-    def __init__(self, first_name, last_name, name, unit_compensation, package_compensation, total_quantity, date, price):
+
+    def __init__(self, first_name, last_name, name, unit_compensation, package_compensation, total_quantity, date, price, role_name):
         self.first_name = first_name
         self.last_name = last_name
         self.name = name
@@ -22,6 +24,7 @@ class UserProduction(db.Model):
         self.total_quantity = total_quantity
         self.date = date
         self.price = price
+        self.role_name = role_name
 
     def package_calculation(production):
         new = {}
@@ -40,6 +43,8 @@ class UserProduction(db.Model):
         new["unit_price"] = production['price']
         new["percentage"] = production['package_compensation']
         new["employee_name"] = production['first_name'] + " " + production['last_name']
+        new['date'] = production['date']
+        new['role_name'] = production['role_name']
     
         return new
 
@@ -54,6 +59,8 @@ class UserProduction(db.Model):
         new["unit_price"] = production['price']
         new["percentage"] = production['unit_compensation']
         new["employee_name"] = production['first_name'] + " " + production['last_name']
+        new['date'] = production['date']
+        new['role_name'] = production['role_name']
 
         return new
 
@@ -100,10 +107,12 @@ class UserProduction(db.Model):
             products.name,
             products.unit_compensation,
             products.package_compensation,
-            products.price 
+            products.price,
+            roles.name AS role_name 
         FROM productions 
         JOIN products ON products.id = productions.product_id 
         JOIN users ON users.id = productions.user_id 
+        JOIN roles ON roles.id = users.role_id
         WHERE users.id = :user_id 
         AND 
             productions.date
@@ -145,17 +154,19 @@ class UserProduction(db.Model):
                 products.name,
                 products.unit_compensation,
                 products.package_compensation,
-                products.price 
+                products.price,
+                roles.name AS role_name
             FROM productions 
             JOIN products ON products.id = productions.product_id 
             JOIN users ON users.id = productions.user_id 
+            JOIN roles ON roles.id = users.role_id
             WHERE 
                 productions.date
             BETWEEN
                 :start_date 
             AND 
                 :end_date
-            GROUP BY users.first_name, users.last_name, productions.date, products.name, products.id;'''), {'start_date': start_date, 'end_date': end_date})
+            GROUP BY users.first_name, users.last_name, productions.date, products.name, products.id, roles.name;'''), {'start_date': start_date, 'end_date': end_date})
         
         schema = UserProductionSchema(many=True)
         all_production = schema.dump(result)
@@ -176,5 +187,6 @@ class UserProductionSchema(ma.Schema):
     total_quantity = fields.Integer(required=True, allow_none=False)
     date = fields.Date(required=True, allow_none=False)
     price = fields.Integer(required=True, allow_none=False)
+    role_name = fields.Str(required=True, allow_none=False)
     class Meta:
-        fields = ('id', 'first_name', 'last_name', 'name', 'unit_compensation', 'package_compensation', 'total_quantity', 'date', 'price')
+        fields = ('id', 'first_name', 'last_name', 'name', 'unit_compensation', 'package_compensation', 'total_quantity', 'date', 'price', 'role_name')
